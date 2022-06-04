@@ -105,7 +105,7 @@ class GRUCell(nn.Module):
         u_g = torch.matmul(input_state, self.linear_w_u)
         n_g = torch.matmul(
           torch.concat([input, torch.mul(r_g, m)], 1), 
-          theta.w_n)
+          self.linear_fw_n)
         
         # TODO: layer norm here
         if self.enable_gru_bias:
