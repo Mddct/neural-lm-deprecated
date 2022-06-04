@@ -63,7 +63,7 @@ class GRUCell(nn.Module):
           self.b_r = CreateVector(self.output_size)
       
         if output_size:
-          self.w_proj = CreateMatric(hidden_size, output_size)
+          self.w_proj = CreateMatrix(hidden_size, output_size)
           if enable_gru_output_bias:
             self.b_proj = CreateVector(output_size)
         
