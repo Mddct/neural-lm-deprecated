@@ -115,7 +115,7 @@ class GRUCell(nn.Module):
           
         u_g = torch.sigmoid(u_g)
         n_g = torch.tanh(n_g)
-        new_c = (1.0 - u_g) * (state0.c) + u_g * n_g
+        new_c = (1.0 - u_g) * (c) + u_g * n_g
         
         # TODO: layer norm here
           
