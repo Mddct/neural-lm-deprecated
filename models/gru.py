@@ -109,8 +109,8 @@ class GRUCell(nn.Module):
         
         # TODO: layer norm here
         if self.enable_gru_bias:
-          u_g = u_g + self.linear_b_u
-          n_g = n_g + self.linear_b_n
+          u_g = u_g + self.b_u
+          n_g = n_g + self.b_n
           
           
         u_g = torch.sigmoid(u_g)
