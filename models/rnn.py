@@ -97,10 +97,17 @@ class StackedRNNLayer(nn.Module):
         return states
 
     def forward(
-        self, input: torch.Tensor, padding: torch.Tensor
+        self,
+        input: torch.Tensor,
+        padding: torch.Tensor,
+        states: Optional[Tuple[torch.Tensor, torch.Tensor]],
     ) -> Tuple[torch.Tensor, List[Tuple[torch.Tensor, torch.Tensor]]]:
         batch_size = input.size(1)
-        state0 = self.zero_state(batch_size=batch_size)
+        state0 = None
+        if states is None:
+            state0 = self.zero_state(batch_size=batch_size)
+        else:
+            state0 = states
 
         xs = input
         state1 = []
