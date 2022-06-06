@@ -63,8 +63,10 @@ class RNNEncoder(nn.Module):
         o = self.log_softmax(o)
         return o
 
-    def forward_step(self, input: torch.Tensor, seq_len: torch.Tensor,
-                     state_m: torch.Tensor, state_c: torch.Tensor):
+    def forward_step(
+        self, input: torch.Tensor, seq_len: torch.Tensor,
+        state_m: torch.Tensor, state_c: torch.Tensor
+    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
 
         embeddding = self.lookup_table(input)  # [bs, time, dim]
 
