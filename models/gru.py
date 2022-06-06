@@ -2,7 +2,11 @@ from typing import Tuple
 
 import torch
 from torch import nn
-  
+
+class RNNCell(nn.Module):
+   def __init__(self):
+      super().__init__()
+    
 def CreateMatrix(in, out):
   weights = torch.Tensor(in, out)
   
@@ -21,7 +25,7 @@ def ApplyPadding(input, padding, pad_value):
   """
   return padding*pad_value+input*(1-padding)
 
-class GRUCell(nn.Module):
+class GRUCell(RNNCell):
     """gru cell  https://arxiv.org/pdf/1412.3555.pdf
     theta:
       - w_n: the weight matrix for the input block.
