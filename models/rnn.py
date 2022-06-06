@@ -110,4 +110,4 @@ class StackedRNNLayer(nn.Module):
             # TODO: dropout here
             # TODO: skip layer(residual)
             xs = ys
-        return (xs, state1)
+        return xs, state1
