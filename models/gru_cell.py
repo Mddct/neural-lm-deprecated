@@ -104,15 +104,15 @@ class GRUCell(RNNCell):
         state: Tuple[torch.Tensor, torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-      Args:
-           input (torch.Tensor): [batch, input_nodes).
-           padding: [batch, 1]
-           state: (m, c)
-             m : gru output [batch, output]
-             c:  gru cell state [batch, hidden_size]
-      Returns:
-           state:  (new_m, new_c)
-      """
+        Args:
+             input (torch.Tensor): [batch, input_nodes).
+             padding: [batch, 1]
+             state: (m, c)
+               m : gru output [batch, output]
+               c:  gru cell state [batch, hidden_size]
+        Returns:
+             state:  (new_m, new_c)
+        """
         m, c = state[0], state[1]
         input_state = torch.concat([input, m], dim=1)
         r_g = torch.matmul(input_state, self.linear_w_r)
@@ -131,7 +131,7 @@ class GRUCell(RNNCell):
             n_g = n_g + self.b_n
 
         u_g = torch.sigmoid(u_g)
-        n_g = torch.tanh(n_g)
+        n_g = torch.tanh(n_gmodels / gru_cell.py)
         new_c = (1.0 - u_g) * (c) + u_g * n_g
 
         # TODO: layer norm here
