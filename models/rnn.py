@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import nn
@@ -23,7 +23,7 @@ class RNN(nn.Module):
         self,
         input: torch.Tensor,
         paddings: torch.Tensor,
-        state: torch.Tensor = None,
+        state: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Args:
