@@ -9,10 +9,18 @@ class RNNCell(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def zero_state(self, *size, methods="zero"):
-        # TODO: support other method eg: random
-        _ = methods
-        return torch.zeros(*size)
+    def zero_state(self, batch_size):
+        _ = batch_size
+        return NotImplemented("abstract method")
+
+
+def zero_state_helper(batch_size,
+                      hidden,
+                      output,
+                      method="zero") -> Tuple[torch.Tensor, torch.Tensor]:
+    # TODO: more methods
+    _ = method
+    return (torch.zeros(batch_size, hidden), torch.zeros(batch_size, output))
 
 
 def CreateMatrix(first, second):
@@ -64,6 +72,10 @@ class GRUCell(RNNCell):
         """Construct an gru cell object."""
         super().__init__()
 
+        self.hidden_size = hidden_size
+        self.num_input_nodes = num_input_nodes
+        self.output_size = output_size
+
         self.apply_layer_norm = apply_layer_norm
         self.layer_norm_epsilon = layer_norm_epsilon
 
@@ -98,6 +110,10 @@ class GRUCell(RNNCell):
             self.br_ln_scale = nn.parameter.Parameter(
                 torch.Tensor(output_size))
             nn.init.constant_(self.br_ln_scale, 0)
+
+    def zero_state(self, batch_size):
+        return zero_state_helper(batch_size, self.hidden_size,
+                                 self.output_size)
 
     def forward(
         self,
