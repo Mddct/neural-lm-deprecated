@@ -23,7 +23,7 @@ class RNN(nn.Module):
             input (torch.Tensor): [time_stamp, batch, input_nodes).
             padding: [time_stamp, batch, 1]
         Returns:
-            output: [time_stamp, output_dim]
+            output: [time_stamp, batch, output_dim]
             state:  [time_stamp, batch, hidden_dim]
       """
       sequence_length = input.size(0)
