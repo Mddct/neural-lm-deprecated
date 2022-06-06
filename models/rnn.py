@@ -23,7 +23,7 @@ class RNN(nn.Module):
         self,
         input: torch.Tensor,
         paddings: torch.Tensor,
-        state: Optional[torch.Tensor],
+        state: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Args:
@@ -40,11 +40,14 @@ class RNN(nn.Module):
         if state is None:
             state = self.cell.zero_state(batch_size=batch_size)
 
-        for idx in range(sequence_length):
-            output, state = self.cell(input[idx], paddings[idx], state)
-            outputs.append(output)
+        state = self.cell.forward(input[0], paddings[0], state)
+        outputs.append(state[0])
+        for idx in range(sequence_length - 1):
+            state = self.cell.forward(input[idx + 1], paddings[idx + 1], state)
 
-        return (torch.stack(outputs), (outputs[-1], state))
+            outputs.append(state[0])
+
+        return torch.stack(outputs), state
 
 
 class StackedRNNLayer(nn.Module):

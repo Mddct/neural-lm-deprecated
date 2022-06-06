@@ -2,6 +2,7 @@ from typing import Tuple
 
 import torch
 from torch import nn
+from torch.functional import Tensor
 
 
 class RNNCell(nn.Module):
@@ -9,7 +10,16 @@ class RNNCell(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def zero_state(self, batch_size):
+    def forward(
+        self,
+        input: torch.Tensor,
+        padding: torch.Tensor,
+        state: Tuple[torch.Tensor, torch.Tensor],
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+
+        return NotImplemented("abstract method")
+
+    def zero_state(self, batch_size) -> Tuple[torch.Tensor, torch.Tensor]:
         _ = batch_size
         return NotImplemented("abstract method")
 
@@ -20,7 +30,7 @@ def zero_state_helper(batch_size,
                       method="zero") -> Tuple[torch.Tensor, torch.Tensor]:
     # TODO: more methods
     _ = method
-    return (torch.zeros(batch_size, hidden), torch.zeros(batch_size, output))
+    return torch.zeros(batch_size, hidden), torch.zeros(batch_size, output)
 
 
 def CreateMatrix(first, second):
@@ -35,7 +45,7 @@ def CreateVector(size):
     return torch.nn.init.xavier_uniform_(nn.parameter.Parameter(weights))
 
 
-def ApplyPadding(input, padding, pad_value):
+def ApplyPadding(input, padding, pad_value) -> torch.Tensor:
     """
      Args:
         input:   [bs, dim]
@@ -111,7 +121,8 @@ class GRUCell(RNNCell):
                 torch.Tensor(output_size))
             nn.init.constant_(self.br_ln_scale, 0)
 
-    def zero_state(self, batch_size):
+    def zero_state(self,
+                   batch_size: int = 1) -> Tuple[torch.Tensor, torch.Tensor]:
         return zero_state_helper(batch_size, self.hidden_size,
                                  self.output_size)
 
@@ -162,4 +173,4 @@ class GRUCell(RNNCell):
         new_m = ApplyPadding(new_m, padding, m)
         new_c = ApplyPadding(new_c, padding, c)
 
-        return (new_m, new_c)
+        return new_m, new_c
