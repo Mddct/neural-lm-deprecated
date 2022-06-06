@@ -1,4 +1,4 @@
-from models import RNNCell
+from models.gru_cell import RNNCell
 
 import torch
 
