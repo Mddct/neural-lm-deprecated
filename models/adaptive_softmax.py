@@ -127,6 +127,9 @@ class AdaptiveLogSoftmax(torch.nn.Module):
             - Output: :math:`(N)`
         """
 
+        bs, seq_len = input.size(0), input.size(1)
+        input = input.view(bs * seq_len, -1)
+
         head_output = self.head(input)
         output = torch.argmax(head_output, dim=1)
         not_in_shortlist = (output >= self.shortlist_size)
