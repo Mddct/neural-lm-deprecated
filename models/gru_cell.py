@@ -9,8 +9,10 @@ class RNNCell(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def zero_state(self):
-        return NotImplementedError("Abstract method")
+    def zero_state(self, *size, methods="zero"):
+        # TODO: support other method eg: random
+        _ = methods
+        return torch.zeros(*size)
 
 
 def CreateMatrix(first, second):
@@ -142,6 +144,6 @@ class GRUCell(RNNCell):
 
         # apply padding
         new_m = ApplyPadding(new_m, padding, m)
-        new_c *= ApplyPadding(new_c, padding, c)
+        new_c = ApplyPadding(new_c, padding, c)
 
         return (new_m, new_c)
