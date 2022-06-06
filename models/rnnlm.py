@@ -1,10 +1,9 @@
-from typing import List, Optional, Tuple
+from typing import Sequence, Tuple
 
 import torch
 from torch import nn
-from torch.functional import Tensor
-from torch.nn.modules import adaptive
 
+from models.adaptive_softmax import AdaptiveLogSoftmax
 from models.label_smoothing import LabelSmoothingLoss
 from models.rnn import StackedRNNLayer
 
@@ -21,6 +20,8 @@ class RNNEncoder(nn.Module):
         cell_type: str = "gru",
         dropout_rate: float = 0.0,
         adaptive_softmax: bool = False,
+        cutoffs: Sequence[int] = [],
+        div_value: float = 2.0,
     ) -> None:
         super().__init__()
 
@@ -29,12 +30,16 @@ class RNNEncoder(nn.Module):
                                            hidden_nodes, output_nodes,
                                            n_layers, dropout_rate)
 
-        # TODO: tie embedding here
-        self.out = nn.Linear(output_nodes, vocab_size)
-
         if adaptive_softmax:
-            pass
+            # TODO: dropout in adaptive sofmax
+            self.log_softmax = AdaptiveLogSoftmax(vocab_size,
+                                                  output_nodes,
+                                                  cutoffs,
+                                                  div_value,
+                                                  head_bias=True)
         else:
+            # TODO: tie embedding here
+            self.out = nn.Linear(output_nodes, vocab_size)
             self.log_softmax = nn.LogSoftmax(dim=vocab_size)
 
     def forward(self, input: torch.Tensor, seq_len: torch.Tensor):

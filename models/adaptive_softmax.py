@@ -72,7 +72,11 @@ class AdaptiveLogSoftmax(torch.nn.Module):
             self.tail.append(projection)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self.log_prob(input)
+        # check shape: [bs, time, vocab]
+        assert len(input.size()) == 3
+        bs, seq_len = input.size(0), input.size(1)
+        input = input.view(bs * seq_len, -1)
+        return self.log_prob(input).view(bs, seq_len)
 
     def _get_full_log_prob_v2(self, input, head_output):
         head_logprob = log_softmax(head_output, dim=1)
