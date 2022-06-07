@@ -14,6 +14,8 @@
 # limitations under the License.
 """Label smoothing module."""
 
+from typing import Tuple
+
 import torch
 from torch import nn
 
@@ -61,7 +63,8 @@ class LabelSmoothingLoss(nn.Module):
         self.size = size
         self.normalize_length = normalize_length
 
-    def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor,
+                target: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Compute loss between x and target.
         The model outputs and data labels tensors are flatten to
         (batch*seqlen, class) shape and a mask is applied to the
@@ -72,7 +75,13 @@ class LabelSmoothingLoss(nn.Module):
                 target signal masked with self.padding_id (batch, seqlen)
         Returns:
             loss (torch.Tensor) : The KL loss, scalar float value
+            loss1 (torch.Tensor): The KL loss, [bs] for each sequence
         """
+        # [batch]
+        n_tokens = torch.where(target == self.padding_idx, target,
+                               0).sum(dim=1)
+        total = n_tokens.sum()
+
         assert x.size(2) == self.size
         batch_size = x.size(0)
         x = x.view(-1, self.size)
@@ -82,11 +91,14 @@ class LabelSmoothingLoss(nn.Module):
         true_dist = torch.zeros_like(x)
         true_dist.fill_(self.smoothing / (self.size - 1))
         ignore = target == self.padding_idx  # (B,)
-        total = len(target) - ignore.sum().item()
+        # total = len(target) - ignore.sum().item()
         target = target.masked_fill(ignore, 0)  # avoid -1 index
         true_dist.scatter_(1, target.unsqueeze(1), self.confidence)
         # remove log softmax because may use adaptive softmax outside
         # kl = self.criterion(torch.log_softmax(x, dim=1), true_dist)
         kl = self.criterion(x, true_dist)
         denom = total if self.normalize_length else batch_size
-        return kl.masked_fill(ignore.unsqueeze(1), 0).sum() / denom
+
+        loss = kl.masked_fill(ignore.unsqueeze(1), 0).sum(dim=1)
+        return loss.sum() / denom, loss.view(batch_size,
+                                             -1).sum(dim=1) / n_tokens

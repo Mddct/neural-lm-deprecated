@@ -122,16 +122,17 @@ class RNNLM(nn.Module):
             seq_len: [bs]
             labels: [bs, time]
         Returns:
-            output: [time_stamp, batch, output_dim]
-            state:  [time_stamp, batch, hidden_dim]
+            loss (torch.Tensor): [batch] Note: before batch average
+            ppl (torch.Tensor) : [batch] Note: before batch average
         """
 
         # logit after sofmax
 
         logit = self.model(input, seq_len)  #[bs, time_stamp, vocab]
-        loss = self.criterion(logit, labels)
-        # TODO: ppl here
-        return loss
+        loss, each_seq_loss_in_batch = self.criterion(logit, labels)
+
+        ppl = each_seq_loss_in_batch.exp()
+        return loss, ppl
 
     @torch.jit.export
     def forward_step(
