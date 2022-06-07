@@ -33,8 +33,8 @@ class RNNEncoder(nn.Module):
 
         if adaptive_softmax:
             # TODO: dropout in adaptive sofmax
-            self.log_softmax = AdaptiveLogSoftmax(vocab_size,
-                                                  output_nodes,
+            self.log_softmax = AdaptiveLogSoftmax(output_nodes,
+                                                  vocab_size,
                                                   cutoffs,
                                                   div_value,
                                                   head_bias=True)
@@ -63,10 +63,10 @@ class RNNEncoder(nn.Module):
         output = self.stacked_rnn(embeddding, padding)
         o, _ = output[0], output[1]
 
-        if self.adaptive_softmax:
-            o = self.out(o)  #[time, bs, output_nodes]
+        if not self.adaptive_softmax:
+            o = self.out(o)  #[time, bs, vocab_size]
 
-        o = o.transpose(0, 1)  #[batch, time, output_nodes]
+        o = o.transpose(0, 1)  #[batch, time, vocab_size]
         o = self.log_softmax(o, dim=2)
         return o
 
@@ -87,8 +87,9 @@ class RNNEncoder(nn.Module):
         output = self.stacked_rnn(embeddding, padding, (state_m, state_c))
         o, s = output[0], output[1]
 
-        o = self.out(o)  #[time, bs, output_nodes]
-        o = o.transpose(0, 1)  #[batch, time, output_nodes]
+        if not self.adaptive_softmax:
+            o = self.out(o)  #[time, bs, vocab_size]
+        o = o.transpose(0, 1)  #[batch, time, vocab_size]
 
         o = self.log_softmax(o)
         return o, s
