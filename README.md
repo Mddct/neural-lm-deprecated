@@ -4,7 +4,7 @@
 focus on shallow fusion on speech recognition
 
 # TODO
-- [ ] adaptive softmax for large voca (because pytorch offical implementation can't work with torchscript)
+- [x] adaptive softmax for large voca (because pytorch offical implementation can't work with torchscript)
 - [ ] onnx support and torchscript
 - [ ] gru (should support tie_embedding)
 - [ ] gru fusion on wenet runtime ctc prefix beam search
