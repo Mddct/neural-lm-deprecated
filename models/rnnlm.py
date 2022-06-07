@@ -111,6 +111,7 @@ class RNNLM(nn.Module):
 
         # TODO: lookup table
         self.model = lm_encoder
+        self.length_normalized_loss = length_normalized_loss
         self.criterion = LabelSmoothingLoss(vocab_size, -1, lsm_weight,
                                             length_normalized_loss)
 
@@ -122,17 +123,21 @@ class RNNLM(nn.Module):
             seq_len: [bs]
             labels: [bs, time]
         Returns:
-            loss (torch.Tensor): [batch] Note: before batch average
+            loss (torch.Tensor): float scalar tensor  Note: before batch average
             ppl (torch.Tensor) : [batch] Note: before batch average
+            total_ppl (torch.Tensor) : flaot scalar tensor
         """
 
         # logit after sofmax
 
         logit = self.model(input, seq_len)  #[bs, time_stamp, vocab]
         loss, each_seq_loss_in_batch = self.criterion(logit, labels)
+        total_ppl = loss.exp(
+        ) if self.length_normalized_loss else loss * input.size(
+            0) / seq_len.sum()
 
         ppl = each_seq_loss_in_batch.exp()
-        return loss, ppl
+        return loss, ppl, total_ppl
 
     @torch.jit.export
     def forward_step(
