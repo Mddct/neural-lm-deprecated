@@ -119,7 +119,7 @@ class RNNLM(nn.Module):
                 labels: torch.Tensor, labels_length: torch.Tensor):
         """
         Args:
-            input (torch.Tensor):  [batch, time, input_nodes).
+            input (torch.Tensor):  [batch, time].
             input_len: [bs]
             labels: [bs, time] -1 is ignore id
             labels_length: [bs]
