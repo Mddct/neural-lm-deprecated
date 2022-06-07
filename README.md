@@ -1,4 +1,4 @@
-# under development may not work until ehole pipeline done
+# under development may not work until whole pipeline done
 
 # neural-lm
 focus on shallow fusion on speech recognition
