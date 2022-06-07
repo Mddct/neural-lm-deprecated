@@ -29,6 +29,7 @@ class RNNEncoder(nn.Module):
         self.stacked_rnn = StackedRNNLayer(cell_type, input_nodes,
                                            hidden_nodes, output_nodes,
                                            n_layers, dropout_rate)
+        self.adaptive_softmax = adaptive_softmax
 
         if adaptive_softmax:
             # TODO: dropout in adaptive sofmax
@@ -62,10 +63,11 @@ class RNNEncoder(nn.Module):
         output = self.stacked_rnn(embeddding, padding)
         o, _ = output[0], output[1]
 
-        o = self.out(o)  #[time, bs, output_nodes]
-        o = o.transpose(0, 1)  #[batch, time, output_nodes]
+        if self.adaptive_softmax:
+            o = self.out(o)  #[time, bs, output_nodes]
 
-        o = self.log_softmax(o)
+        o = o.transpose(0, 1)  #[batch, time, output_nodes]
+        o = self.log_softmax(o, dim=2)
         return o
 
     def forward_step(
@@ -125,6 +127,7 @@ class RNNLM(nn.Module):
         """
 
         # logit after sofmax
+
         logit = self.model(input, seq_len)  #[bs, time_stamp, vocab]
         loss = self.criterion(logit, labels)
         # TODO: ppl here
