@@ -115,26 +115,29 @@ class RNNLM(nn.Module):
         self.criterion = LabelSmoothingLoss(vocab_size, -1, lsm_weight,
                                             length_normalized_loss)
 
-    def forward(self, input: torch.Tensor, seq_len: torch.Tensor,
-                labels: torch.Tensor):
+    def forward(self, input: torch.Tensor, input_length: torch.Tensor,
+                labels: torch.Tensor, labels_length: torch.Tensor):
         """
         Args:
             input (torch.Tensor):  [batch, time, input_nodes).
-            seq_len: [bs]
-            labels: [bs, time]
+            input_len: [bs]
+            labels: [bs, time] -1 is ignore id
+            labels_length: [bs]
         Returns:
             loss (torch.Tensor): float scalar tensor  Note: before batch average
             ppl (torch.Tensor) : [batch] Note: before batch average
             total_ppl (torch.Tensor) : flaot scalar tensor
         """
 
+        assert (input.shape[0] == input_length.shape[0] == labels.shape[0] ==
+                labels_length.shape[0]), (input.shape, input_length.shape,
+                                          labels.shape, labels_length.shape)
         # logit after sofmax
-
-        logit = self.model(input, seq_len)  #[bs, time_stamp, vocab]
+        logit = self.model(input, input_length)  #[bs, time_stamp, vocab]
         loss, each_seq_loss_in_batch = self.criterion(logit, labels)
         total_ppl = loss.exp(
         ) if self.length_normalized_loss else loss * input.size(
-            0) / seq_len.sum()
+            0) / labels_length.sum()
 
         ppl = each_seq_loss_in_batch.exp()
         return loss, ppl, total_ppl
