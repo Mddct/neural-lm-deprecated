@@ -69,7 +69,7 @@ class RNNEncoder(nn.Module):
             o = self.out(o)  #[time, bs, vocab_size]
 
         o = self.log_softmax(o, dim=2)
-        o = o.transpose(0, 1)  #[batch, time, vocab_size]
+        o = o.transpose(0, 1).contiguous()  #[batch, time, vocab_size]
         return o
 
     def forward_step(
@@ -93,7 +93,7 @@ class RNNEncoder(nn.Module):
             o = self.out(o)  #[time, bs, vocab_size]
 
         o = self.log_softmax(o)
-        o = o.transpose(0, 1)  #[batch, time, vocab_size]
+        o = o.transpose(0, 1).contiguous()  #[batch, time, vocab_size]
         return o, s
 
 

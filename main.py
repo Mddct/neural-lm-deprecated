@@ -2,7 +2,7 @@ import torch
 
 from models.gru_cell import GRUCell
 from models.rnn import RNN, StackedRNNLayer
-from models.rnnlm import RNNEncoder
+from models.rnnlm import RNNLM, RNNEncoder
 
 cell = GRUCell(
     10,
@@ -44,3 +44,13 @@ input = torch.ones(10, 20, dtype=torch.int64)
 input_len = torch.ones(10)
 input_len[0] = 20
 loss = rnn_encoder(input, input_len)
+
+rnnlm = RNNLM(vocab_size=100, lm_encoder=rnn_encoder, lsm_weight=0.9)
+label = torch.ones(10, 20, dtype=torch.int64)
+label[:, 10:20] = -1
+label_len = torch.ones(10) * 10
+
+loss, ppl, total_ppl = rnnlm(input, input_len, label, label_len)
+print(loss)
+print(ppl)
+print(total_ppl)
