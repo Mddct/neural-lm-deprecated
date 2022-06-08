@@ -151,3 +151,27 @@ class RNNLM(nn.Module):
 
         o, s = self.model.forward_step(input, seq_len, state_m, state_c)
         return o, s[0], s[1]
+
+
+def init_lm_model(configs) -> nn.Module:
+
+    vocab_size = configs['vocab_size']
+    encoder_type = configs.get('encoder', 'rnn')
+
+    assert encoder_type == 'rnn'
+    # cutoffs in yaml: 100,200,400 -> [100,200,400]
+    if 'adaptive_softmax' in configs['encoder_conf']:
+        assert 'cutoffs' in configs['encoder_conf']
+        cutoffs_str = configs['encoder_conf']['cutoffs']
+        cutoffs = []
+        for cut in cutoffs_str.replace(' ', "", -1).split(","):
+            cutoffs.append(cut)
+            configs['encoder_conf']['cutoffs'] = cutoffs
+    encoder = RNNEncoder(**configs['encoder_conf'])
+
+    rnnlm = RNNLM(
+        vocab_size=vocab_size,
+        lm_encoder=encoder,
+        **configs['model_conf'],
+    )
+    return rnnlm
