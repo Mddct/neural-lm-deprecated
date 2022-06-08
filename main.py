@@ -2,7 +2,7 @@ import torch
 
 from models.gru_cell import GRUCell
 from models.rnn import RNN, StackedRNNLayer
-from models.rnnlm import RNNLM, RNNEncoder
+from models.rnnlm import RNNLM, RNNEncoder, init_lm_model
 
 cell = GRUCell(
     10,
@@ -54,3 +54,13 @@ loss, ppl, total_ppl = rnnlm(input, input_len, label, label_len)
 print(loss)
 print(ppl)
 print(total_ppl)
+
+import yaml
+
+with open('test.yaml', 'r') as fin:
+    configs = yaml.load(fin, Loader=yaml.FullLoader)
+
+configs['vocab_size'] = 100
+model = init_lm_model(configs=configs)
+
+print(model(input, input_len, label, label_len))

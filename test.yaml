@@ -1,0 +1,17 @@
+# network architecture
+# encoder related
+encoder: rnn
+encoder_conf:
+    n_layers: 4
+    input_nodes: 100
+    hidden_nodes: 100
+    output_nodes: 100
+    cell_type: 'gru'
+    adaptive_softmax: true
+    cutoffs: '10,30'
+    div_value: 2
+
+# hybrid CTC/attention
+model_conf:
+    lsm_weight: 0.1     # label smoothing option
+    length_normalized_loss: false
