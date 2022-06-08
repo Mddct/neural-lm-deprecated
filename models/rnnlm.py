@@ -145,10 +145,20 @@ class RNNLM(nn.Module):
 
     @torch.jit.export
     def forward_step(
-        self, input: torch.Tensor, seq_len: torch.Tensor,
-        state_m: torch.Tensor, state_c: torch.Tensor
+        self, input: torch.Tensor, state_m: torch.Tensor, state_c: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            input: [batch_size, 1]
 
+        Returns:
+            output: log  probability, [batch_size, vocab_size]
+            state:
+
+        """
+        bs = input.size(0)
+        seq_len = torch.ones(bs, 1)
+        # Note: for one step only
         o, s = self.model.forward_step(input, seq_len, state_m, state_c)
         return o, s[0], s[1]
 

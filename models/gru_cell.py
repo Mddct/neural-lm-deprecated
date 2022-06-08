@@ -42,7 +42,7 @@ def CreateMatrix(first, second):
 
 def CreateVector(size):
     weights = torch.Tensor(size)
-    return torch.nn.init.xavier_uniform_(nn.parameter.Parameter(weights))
+    return torch.nn.init.zeros_(nn.parameter.Parameter(weights))
 
 
 def ApplyPadding(input, padding, pad_value) -> torch.Tensor:
@@ -108,18 +108,18 @@ class GRUCell(RNNCell):
                 self.b_proj = CreateVector(output_size)
 
         if apply_layer_norm:
-            assert layer_norm_epsilon is None
+            assert layer_norm_epsilon is not None
             self.bn_ln_scale = nn.parameter.Parameter(
                 torch.Tensor(hidden_size))
-            nn.init.constant_(self.bn_ln_scale, 0)
+            nn.init.zeros_(self.bn_ln_scale)
 
             self.bu_ln_scale = nn.parameter.Parameter(
                 torch.Tensor(hidden_size))
-            nn.init.constant_(self.bu_ln_scale, 0)
+            nn.init.zeros_(self.bu_ln_scale)
 
             self.br_ln_scale = nn.parameter.Parameter(
                 torch.Tensor(output_size))
-            nn.init.constant_(self.br_ln_scale, 0)
+            nn.init.zeros_(self.br_ln_scale)
 
     def zero_state(self,
                    batch_size: int = 1) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -146,7 +146,7 @@ class GRUCell(RNNCell):
         input_state = torch.concat([input, m], dim=1)
         r_g = torch.matmul(input_state, self.linear_w_r)
 
-        if self.enable_gru_bias:
+        if self.enable_gru_output_bias:
             r_g = r_g + self.b_r
             r_g = torch.sigmoid(r_g)
 
@@ -155,7 +155,7 @@ class GRUCell(RNNCell):
                            self.linear_w_n)
 
         # TODO: layer norm here
-        if self.enable_gru_bias:
+        if self.enable_gru_output_bias:
             u_g = u_g + self.b_u
             n_g = n_g + self.b_n
 
