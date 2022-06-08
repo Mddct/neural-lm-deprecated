@@ -134,6 +134,7 @@ class Executor:
         # in order to avoid division by 0
         num_seen_utts = 1
         total_loss = 0.0
+        total_ppl = 0.0
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
 
@@ -154,11 +155,13 @@ class Executor:
                 if torch.isfinite(loss):
                     num_seen_utts += num_utts
                     total_loss += loss.item() * num_utts
+                    # TODO: total ppl here
                 if batch_idx % log_interval == 0:
                     log_str = 'CV Batch {}/{} loss {:.6f} '.format(
                         epoch, batch_idx, loss.item())
-                    if total_ppl is not None:
-                        log_str += 'loss_att {:.6f} '.format(total_ppl.item())
+                    # TODO: total ppl log here
+                    # if total_ppl is not None:
+                    #     log_str += 'loss_ppl {:.6f} '.format(total_ppl.item())
 
                     log_str += 'history loss {:.6f}'.format(total_loss /
                                                             num_seen_utts)
