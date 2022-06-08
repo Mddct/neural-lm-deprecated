@@ -72,14 +72,15 @@ class AdaptiveLogSoftmax(torch.nn.Module):
             self.tail.append(projection)
 
     def forward(self, input: torch.Tensor, dim: int) -> torch.Tensor:
-        # check shape: [bs, time, vocab]
+        # check shape: [x, y, vocab]
         assert len(input.size()) == 3
-        bs, seq_len, dim = input.size(0), input.size(1), input.size(2)
+        d1 = input.size(0)
+        d2 = input.size(1)
         # hard code for compatibility
         if dim == 1:
             pass
-        input = input.view(bs * seq_len, -1)
-        return self.log_prob(input).view(bs, seq_len, dim)
+        ys = input.view(d1 * d2, -1)
+        return self.log_prob(ys).view(d1, d2, -1)
 
     def _get_full_log_prob_v2(self, input, head_output):
         head_logprob = log_softmax(head_output, dim=1)
@@ -114,39 +115,3 @@ class AdaptiveLogSoftmax(torch.nn.Module):
 
         head_output = self.head(input)
         return self._get_full_log_prob_v2(input, head_output)
-
-    def predict(self, input: torch.Tensor) -> torch.Tensor:
-        r""" This is equivalent to `self.log_pob(input).argmax(dim=1)`,
-        but is more efficient in some cases.
-
-        Args:
-            input (Tensor): a minibatch of examples
-
-        Returns:
-            output (Tensor): a class with the highest probability for each example
-
-        Shape:
-            - Input: :math:`(N, \texttt{in\_features})`
-            - Output: :math:`(N)`
-        """
-
-        bs, seq_len = input.size(0), input.size(1)
-        input = input.view(bs * seq_len, -1)
-
-        head_output = self.head(input)
-        output = torch.argmax(head_output, dim=1)
-        not_in_shortlist = (output >= self.shortlist_size)
-        all_in_shortlist = not (not_in_shortlist.any())
-
-        if all_in_shortlist:
-            return output
-
-        elif not_in_shortlist.all():
-            log_prob = self._get_full_log_prob_v2(input, head_output)
-            return torch.argmax(log_prob, dim=1).view(bs, seq_len)
-
-        else:
-            log_prob = self._get_full_log_prob_v2(
-                input[not_in_shortlist], head_output[not_in_shortlist])
-            output[not_in_shortlist] = torch.argmax(log_prob, dim=1)
-            return output

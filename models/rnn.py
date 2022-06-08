@@ -122,6 +122,7 @@ class StackedRNNLayer(nn.Module):
 
         xs = input
         state1 = []
+
         for i in range(self.n_layers):
             ys, s = self.rnn[i](xs, padding, state0[i])
             state1.append(s)
