@@ -27,11 +27,13 @@ class RNN(nn.Module):
     ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Args:
-            input (torch.Tensor): [time_stamp, batch, input_nodes).
-            padding: [time_stamp, batch, 1]
+            input (torch.Tensor): [time, batch, input_nodes).
+            padding: [time, batch, 1]
         Returns:
-            output: [time_stamp, batch, output_dim]
-            state:  [time_stamp, batch, hidden_dim]
+            output: [time, batch, output_dim]
+            state:  final state,
+                    m: [batch, output_dim]
+                    c: [batch, hidden_dim]
         """
         sequence_length = input.size(0)
         batch_size = input.size(1)
@@ -100,8 +102,13 @@ class StackedRNNLayer(nn.Module):
         self,
         input: torch.Tensor,
         padding: torch.Tensor,
-        states: Optional[Tuple[torch.Tensor, torch.Tensor]],
+        states: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, List[Tuple[torch.Tensor, torch.Tensor]]]:
+        """
+        Args:
+            input: [time, batch, dim]
+            padding: [time, batch, 1]
+        """
         batch_size = input.size(1)
         state0 = None
         if states is None:
