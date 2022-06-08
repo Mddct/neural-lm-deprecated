@@ -108,6 +108,10 @@ class StackedRNNLayer(nn.Module):
         Args:
             input: [time, batch, dim]
             padding: [time, batch, 1]
+
+        Returns:
+            output: [time, batch, output_size]
+            state1: final state each layer
         """
         batch_size = input.size(1)
         state0 = None
