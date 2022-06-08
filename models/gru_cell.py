@@ -51,7 +51,8 @@ def ApplyPadding(input, padding, pad_value) -> torch.Tensor:
         input:   [bs, dim]
         padding: [bs,  1 ],  value 1 is to pad
     """
-    return padding * pad_value + input * (1 - padding)
+    # return padding * pad_value + input * (1 - padding)
+    return padding * pad_value + input * (~padding)
 
 
 class GRUCell(RNNCell):

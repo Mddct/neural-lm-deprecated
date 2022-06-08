@@ -54,8 +54,10 @@ class RNNEncoder(nn.Module):
         embeddding = self.lookup_table(input)  # [bs, time, dim]
 
         max_seq_len = torch.max(seq_len)
+        assert max_seq_len == input.size(1)
+
         ids = torch.arange(0, max_seq_len, 1)  # [bs]
-        padding = seq_len.unsqueeze(1) < ids  # [bs, max_seq_len]
+        padding = seq_len.unsqueeze(1) <= ids.unsqueeze(0)  # [bs, max_seq_len]
 
         padding = padding.transpose(0, 1).unsqueeze(2)  #[time, bs, 1]
         embeddding = embeddding.transpose(0, 1)
@@ -66,8 +68,8 @@ class RNNEncoder(nn.Module):
         if not self.adaptive_softmax:
             o = self.out(o)  #[time, bs, vocab_size]
 
-        o = o.transpose(0, 1)  #[batch, time, vocab_size]
         o = self.log_softmax(o, dim=2)
+        o = o.transpose(0, 1)  #[batch, time, vocab_size]
         return o
 
     def forward_step(
@@ -89,9 +91,9 @@ class RNNEncoder(nn.Module):
 
         if not self.adaptive_softmax:
             o = self.out(o)  #[time, bs, vocab_size]
-        o = o.transpose(0, 1)  #[batch, time, vocab_size]
 
         o = self.log_softmax(o)
+        o = o.transpose(0, 1)  #[batch, time, vocab_size]
         return o, s
 
 
