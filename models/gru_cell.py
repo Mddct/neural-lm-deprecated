@@ -30,7 +30,7 @@ def zero_state_helper(batch_size,
                       method="zero") -> Tuple[torch.Tensor, torch.Tensor]:
     # TODO: more methods
     _ = method
-    return torch.zeros(batch_size, hidden), torch.zeros(batch_size, output)
+    return torch.zeros(batch_size, output), torch.zeros(batch_size, hidden)
 
 
 def CreateMatrix(first, second):

@@ -5,7 +5,7 @@ encoder_conf:
     n_layers: 4
     input_nodes: 100
     hidden_nodes: 100
-    output_nodes: 100
+    output_nodes: 20
     cell_type: 'gru'
     adaptive_softmax: true
     cutoffs: '10,30'

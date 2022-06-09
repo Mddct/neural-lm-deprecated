@@ -78,6 +78,7 @@ class LabelSmoothingLoss(nn.Module):
             loss1 (torch.Tensor): The KL loss, [bs] for each sequence
         """
         # [batch]
+        print(x.shape)
         n_tokens = torch.where(target == self.padding_idx, 0, 1).sum(dim=1)
         total = n_tokens.sum()
 

@@ -63,4 +63,5 @@ with open('test.yaml', 'r') as fin:
 configs['vocab_size'] = 100
 model = init_lm_model(configs=configs)
 
-print(model(input, input_len, label, label_len))
+_, ppl, _ = model(input, input_len, label, label_len)
+print(ppl.shape)
