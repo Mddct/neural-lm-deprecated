@@ -15,6 +15,7 @@
 # Note: this code copy from wenet https://github.com/wenet-e2e/wenet/edit/main/wenet/utils/executor.py
 # and make some changes to support lm
 import logging
+import math
 from contextlib import nullcontext
 
 # if your python version < 3.7 use the below one
@@ -79,8 +80,8 @@ class Executor:
                     # The more details about amp can be found in
                     # https://pytorch.org/docs/stable/notes/amp_examples.html
                     with torch.cuda.amp.autocast(scaler is not None):
-                        loss, _, total_ppl = model(input, input_length, label,
-                                                   label_length)
+                        loss, _, batch_ppl, _ = model(input, input_length,
+                                                      label, label_length)
                         loss = loss.sum()
                         loss = loss / accum_grad
                     if use_amp:
@@ -92,7 +93,7 @@ class Executor:
                 if batch_idx % accum_grad == 0:
                     if rank == 0 and writer is not None:
                         writer.add_scalar('train_loss', loss, self.step)
-                        writer.add_scalar('batch ppl:', total_ppl, self.step)
+                        writer.add_scalar('batch ppl:', batch_ppl, self.step)
                     # Use mixed precision training
                     if use_amp:
                         scaler.unscale_(optimizer)
@@ -118,8 +119,8 @@ class Executor:
                     log_str = 'TRAIN Batch {}/{} loss {:.6f} '.format(
                         epoch, batch_idx,
                         loss.item() * accum_grad)
-                    if total_ppl is not None:
-                        log_str += 'loss_att {:.6f} '.format(total_ppl.item())
+                    if batch_ppl is not None:
+                        log_str += 'loss_att {:.6f} '.format(batch_ppl.item())
 
                     log_str += 'lr {:.8f} rank {}'.format(lr, rank)
                     logging.debug(log_str)
@@ -134,7 +135,7 @@ class Executor:
         # in order to avoid division by 0
         num_seen_utts = 1
         total_loss = 0.0
-        total_ppl = 0.0
+        total_valid_words = 0
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
 
@@ -149,22 +150,25 @@ class Executor:
 
                 if num_utts == 0:
                     continue
-                loss, _, total_ppl = model(input, input_length, label,
-                                           label_length)
+                loss, _, batch_ppl, valid_words = model(
+                    input, input_length, label, label_length)
                 loss = loss.sum()
                 if torch.isfinite(loss):
+                    total_valid_words += valid_words.item()
                     num_seen_utts += num_utts
-                    total_loss += loss.item() * num_utts
+
+                    total_loss += loss.item()
                     # TODO: total ppl here
                 if batch_idx % log_interval == 0:
                     log_str = 'CV Batch {}/{} loss {:.6f} '.format(
                         epoch, batch_idx, loss.item())
-                    # TODO: total ppl log here
-                    # if total_ppl is not None:
-                    #     log_str += 'loss_ppl {:.6f} '.format(total_ppl.item())
 
-                    log_str += 'history loss {:.6f}'.format(total_loss /
-                                                            num_seen_utts)
+                    if batch_ppl is not None:
+                        log_str += 'batch_ppl {:.6f} '.format(batch_ppl.item())
+                    log_str += 'history ppl {:.6f}'.format(
+                        math.exp(total_loss) / total_valid_words)
                     log_str += ' rank {}'.format(rank)
                     logging.debug(log_str)
-        return total_loss, num_seen_utts
+
+        return total_loss, num_seen_utts, math.exp(
+            total_loss) / total_valid_words

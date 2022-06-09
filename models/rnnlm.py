@@ -137,13 +137,14 @@ class RNNLM(nn.Module):
                                           labels.shape, labels_length.shape)
         # logit after sofmax
         logit = self.model(input, input_length)  #[bs, time_stamp, vocab]
+        valid_words = labels.sum()
         loss, each_seq_loss_in_batch = self.criterion(logit, labels)
         total_ppl = loss.exp(
         ) if self.length_normalized_loss else loss * input.size(
-            0) / labels_length.sum()
+            0) / valid_words
 
         ppl = each_seq_loss_in_batch.exp()
-        return loss, ppl, total_ppl
+        return loss, ppl, total_ppl, valid_words
 
     @torch.jit.export
     def forward_step(
