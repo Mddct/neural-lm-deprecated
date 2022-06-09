@@ -58,7 +58,7 @@ class DistributedSampler:
         else:
             self.rank = 0
             self.world_size = 1
-        torch.
+
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is None:
             self.worker_id = 0
@@ -113,11 +113,7 @@ class DataList(IterableDataset):
             yield data
 
 
-def Dataset(data_type,
-            data_list_file,
-            symbol_table,
-            conf,
-            partition=True):
+def Dataset(data_type, data_list_file, symbol_table, conf, partition=True):
     """ Construct dataset from arguments
     """
     assert data_type in ['raw_txt']
