@@ -60,7 +60,8 @@ class StackedRNNLayer(nn.Module):
                  hidden_nodes: int = 1024,
                  output_nodes: int = 1024,
                  n_layers: int = 1,
-                 dropout_rate: float = 0) -> None:
+                 dropout_rate: float = 0,
+                 skip_first_dropout: bool = True) -> None:
 
         super().__init__()
 
@@ -87,7 +88,9 @@ class StackedRNNLayer(nn.Module):
             self.rnn.append(RNN(cell=cell))
 
         # dropout rate for each layer
-        self.dropout_rate = dropout_rate
+        self.dropout = torch.nn.Dropout(p=dropout_rate)
+        # whether to skip first layer
+        self.skip_first_dropout = skip_first_dropout
 
     def zero_state(self, batch_size) -> List[torch.Tensor]:
 
@@ -123,10 +126,20 @@ class StackedRNNLayer(nn.Module):
         xs = input
         state1 = []
 
+        if not self.skip_first_dropout:
+            xs = self.dropout(xs)
+
         for i in range(self.n_layers):
             ys, s = self.rnn[i](xs, padding, state0[i])
+            ys = self.dropout(ys)
             state1.append(s)
-            # TODO: dropout here
-            # TODO: skip layer(residual)
-            xs = ys
+            # rnn base have embedding , different input/output shape
+            # internal layer have same input output shape:
+            # 1->ouput+2->output ...
+            # TODO: qadd
+            if i >= 1 and i <= self.n_layers - 1:
+                xs = xs + ys
+            else:
+                xs = ys
+
         return xs, state1

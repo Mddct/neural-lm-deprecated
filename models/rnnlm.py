@@ -112,7 +112,6 @@ class RNNLM(nn.Module):
         """
         super().__init__()
 
-        # TODO: lookup table
         self.model = lm_encoder
         self.length_normalized_loss = length_normalized_loss
         self.criterion = LabelSmoothingLoss(vocab_size, -1, lsm_weight,
@@ -137,7 +136,7 @@ class RNNLM(nn.Module):
                                           labels.shape, labels_length.shape)
         # logit after sofmax
         logit = self.model(input, input_length)  #[bs, time_stamp, vocab]
-        valid_words = labels.sum()
+        valid_words = labels_length.sum()
         loss, each_seq_loss_in_batch = self.criterion(logit, labels)
         total_ppl = loss.exp(
         ) if self.length_normalized_loss else loss * input.size(

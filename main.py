@@ -50,10 +50,11 @@ label = torch.ones(10, 20, dtype=torch.int64)
 label[:, 10:20] = -1
 label_len = torch.ones(10) * 10
 
-loss, ppl, total_ppl = rnnlm(input, input_len, label, label_len)
+loss, ppl, total_ppl, valid_words = rnnlm(input, input_len, label, label_len)
 print(loss)
 print(ppl)
 print(total_ppl)
+print(valid_words)
 
 import yaml
 
@@ -63,5 +64,6 @@ with open('test.yaml', 'r') as fin:
 configs['vocab_size'] = 100
 model = init_lm_model(configs=configs)
 
-_, ppl, _ = model(input, input_len, label, label_len)
+_, ppl, _, valid_words = model(input, input_len, label, label_len)
 print(ppl.shape)
+print(valid_words)
