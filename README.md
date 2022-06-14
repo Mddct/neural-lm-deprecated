@@ -13,7 +13,7 @@ See if it appears in ctc+lm fusion
 # TODO
 - [x] adaptive softmax for large voca (because pytorch offical implementation can't work with torchscript)
 - [ ] onnx support and torchscript
-- [ ] gru
+- [x] gru
 - [x] rnn tie embedding
 - [ ] gru fusion on wenet runtime ctc prefix beam search
 - [ ] transformer-xl with cache

@@ -45,9 +45,11 @@ def get_args():
     parser.add_argument('--train_data', required=True, help='train data file')
     parser.add_argument('--cv_data', required=True, help='cv data file')
     parser.add_argument('--gpu',
-                        type=int,
-                        default=-1,
-                        help='gpu id for this local rank, -1 for cpu')
+                        type=bool,
+                        default=true,
+                        help='whether to use gpu')
+    parser.add_argument("--local_rank", default=1, type=int)
+
     parser.add_argument('--model_dir', required=True, help='save model dir')
     parser.add_argument('--checkpoint', help='checkpoint model')
     parser.add_argument('--tensorboard_dir',
@@ -127,7 +129,7 @@ def main():
     args = get_args()
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s')
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.local_rank)
 
     # Set random seed
     torch.manual_seed(777)
@@ -136,13 +138,18 @@ def main():
     if len(args.override_config) > 0:
         configs = override_config(configs, args.override_config)
 
+    args.world_size = int(os.environ["WORLD_SIZE"])
+    args.rank = int(os.environ['RANK'])
+
     distributed = args.world_size > 1
     if distributed:
-        logging.info('training on multiple gpus, this gpu {}'.format(args.gpu))
-        dist.init_process_group(args.dist_backend,
-                                init_method=args.init_method,
-                                world_size=args.world_size,
-                                rank=args.rank)
+        logging.info('training on multiple gpus, this gpu {}'.format(
+            args.rank))
+        dist.init_process_group(args.dist_backend, init_method="env://")
+        # dist.init_process_group(args.dist_backend,
+        #                         init_method=args.init_method,
+        #                         world_size=args.world_size,
+        #                         rank=args.rank)
 
     symbol_table = read_symbol_table(args.symbol_table)
 
@@ -162,11 +169,13 @@ def main():
                                    batch_size=None,
                                    pin_memory=args.pin_memory,
                                    num_workers=args.num_workers,
+                                   persistent_workers=True,
                                    prefetch_factor=args.prefetch)
     cv_data_loader = DataLoader(cv_dataset,
                                 batch_size=None,
                                 pin_memory=args.pin_memory,
                                 num_workers=args.num_workers,
+                                persistent_workers=True,
                                 prefetch_factor=args.prefetch)
 
     vocab_size = len(symbol_table)
@@ -254,22 +263,20 @@ def main():
         logging.info('Epoch {} TRAIN info lr {}'.format(epoch, lr))
         executor.train(model, optimizer, scheduler, train_data_loader, device,
                        writer, configs, scaler)
-        total_loss, num_seen_utts = executor.cv(model, cv_data_loader, device,
-                                                configs)
+        total_loss, num_seen_utts, total_ppl = executor.cv(
+            model, cv_data_loader, device, configs)
         cv_loss = total_loss / num_seen_utts
 
         logging.info('Epoch {} CV info cv_loss {}'.format(epoch, cv_loss))
         if args.rank == 0:
             save_model_path = os.path.join(model_dir, '{}.pt'.format(epoch))
             save_checkpoint(
-                model,
-                save_model_path,
-                {
+                model, save_model_path, {
                     'epoch': epoch,
                     'lr': lr,
                     'cv_loss': cv_loss,
+                    "total_ppl": total_ppl,
                     'step': executor.step
-                    # TODO: cv ppl here
                 })
             writer.add_scalar('epoch/cv_loss', cv_loss, epoch)
             writer.add_scalar('epoch/lr', lr, epoch)
