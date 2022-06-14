@@ -40,16 +40,16 @@ class RNNEncoder(nn.Module):
                                                   cutoffs,
                                                   div_value,
                                                   head_bias=True)
-        # elif tie_embedding:
-        #     if output_nodes != input_nodes:
-        #         pass
-        #         # self.out_to_voca = nn.Linear(output_nodes, vocab_size)
-        #         # wrong implementation
-
-        #     self.out = nn.Linear(input_nodes, vocab_size)
-        #     self.out.weight = self.lookup_table.weight
         else:
-            self.out = nn.Linear(output_nodes, vocab_size)
+            if tie_embedding:
+                if output_nodes != input_nodes:
+                    raise ValueError(
+                        'When using the tied flag, input nodes must be equal to outputnodes'
+                    )
+                self.out = nn.Linear(vocab_size, input_nodes)
+            else:
+                self.out = nn.Linear(output_nodes, vocab_size)
+
             self.log_softmax = nn.LogSoftmax(dim=vocab_size)
 
     def forward(self, input: torch.Tensor, seq_len: torch.Tensor):
@@ -75,11 +75,9 @@ class RNNEncoder(nn.Module):
         o, _ = output[0], output[1]
 
         if not self.adaptive_softmax:
-            # if self.tie_embedding:
-            #     if self.out_to_voca:
-            #         o = self.out_to_voca(o)
-
-            #     # o = self.lookup_table(o)
+            if self.tie_embedding:
+                o = self.lookup_table(torch.transpose(o, 1, 2))
+                o = torch.transpose(o, 1, 2)  # [time, bs, vocab_size]
 
             o = self.out(o)  #[time, bs, vocab_size]
 
