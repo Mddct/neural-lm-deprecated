@@ -28,4 +28,5 @@ See if it appears in ctc+lm fusion
 - [Towards better decoding and language model integration in sequence to sequence models](https://arxiv.org/pdf/1612.02695.pdf)
 - [END-TO-END ATTENTION-BASED LARGE VOCABULARY SPEECH RECOGNITION](https://arxiv.org/pdf/1508.04395.pdf)
 - [Efficient softmax approximation for GPUs](https://arxiv.org/pdf/1609.04309.pdf)
+- [Using the Output Embedding to Improve Language Models](https://arxiv.org/abs/1608.05859)
 - etc
