@@ -22,6 +22,7 @@ class RNNEncoder(nn.Module):
         adaptive_softmax: bool = False,
         cutoffs: Sequence[int] = [],
         div_value: float = 2.0,
+        tie_embedding: bool = False,
     ) -> None:
         super().__init__()
 
@@ -30,6 +31,7 @@ class RNNEncoder(nn.Module):
                                            hidden_nodes, output_nodes,
                                            n_layers, dropout_rate)
         self.adaptive_softmax = adaptive_softmax
+        self.tie_embedding = tie_embedding
 
         if adaptive_softmax:
             # TODO: dropout in adaptive sofmax
@@ -38,7 +40,13 @@ class RNNEncoder(nn.Module):
                                                   cutoffs,
                                                   div_value,
                                                   head_bias=True)
+        elif tie_embedding:
+            if output_nodes != input_nodes:
+                self.out_to_voca = nn.Linear(output_nodes, vocab_size)
+
+            self.out = nn.Linear(input_nodes, vocab_size)
         else:
+
             # TODO: tie embedding here
             self.out = nn.Linear(output_nodes, vocab_size)
             self.log_softmax = nn.LogSoftmax(dim=vocab_size)
@@ -66,6 +74,12 @@ class RNNEncoder(nn.Module):
         o, _ = output[0], output[1]
 
         if not self.adaptive_softmax:
+            if self.tie_embedding:
+                if self.out_to_voca:
+                    o = self.out_to_voca(o)
+
+                o = self.lookup_table(o)
+
             o = self.out(o)  #[time, bs, vocab_size]
 
         o = self.log_softmax(o, dim=2)
