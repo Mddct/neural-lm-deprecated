@@ -47,6 +47,7 @@ class RNNEncoder(nn.Module):
                         'When using the tied flag, input nodes must be equal to outputnodes'
                     )
                 self.out = nn.Linear(vocab_size, input_nodes)
+                self.out.weight = self.lookup_table.weight
             else:
                 self.out = nn.Linear(output_nodes, vocab_size)
 
@@ -76,8 +77,7 @@ class RNNEncoder(nn.Module):
 
         if not self.adaptive_softmax:
             if self.tie_embedding:
-                o = self.lookup_table(torch.transpose(o, 1, 2))
-                o = torch.transpose(o, 1, 2)  # [time, bs, vocab_size]
+                o = self.lookup_table(0)
 
             o = self.out(o)  #[time, bs, vocab_size]
 
