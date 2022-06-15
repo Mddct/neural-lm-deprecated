@@ -163,8 +163,11 @@ class RNNLM(nn.Module):
 
     @torch.jit.export
     def forward_step(
-        self, input: torch.Tensor, state_m: torch.Tensor, state_c: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        self,
+        input: torch.Tensor,
+        output: torch.Tensor,
+        state: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             input: [batch_size, 1]
@@ -174,11 +177,14 @@ class RNNLM(nn.Module):
             state:
 
         """
+        state_m, state_c = torch.split(state, 2, dim=0)
         bs = input.size(0)
         seq_len = torch.ones(bs, 1)
         # Note: for one step only
         o, s_m, s_c = self.model.forward_step(input, seq_len, state_m, state_c)
-        return o, s_m, s_c
+        next_state = torch.stack([s_m, s_c], dim=0)
+        score = torch.sum(torch.where(input == output, 1, 0), dim=1)
+        return score, next_state
 
 
 def init_lm_model(configs) -> nn.Module:
