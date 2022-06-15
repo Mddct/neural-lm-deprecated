@@ -34,6 +34,8 @@ class RNNEncoder(nn.Module):
         self.tie_embedding = tie_embedding
 
         if adaptive_softmax:
+            # Note: for compatibility: don't use when adaptive softmax is true
+            self.out = nn.Linear(vocab_size, input_nodes)
             # TODO: dropout in adaptive sofmax
             self.log_softmax = AdaptiveLogSoftmax(output_nodes,
                                                   vocab_size,
@@ -75,9 +77,10 @@ class RNNEncoder(nn.Module):
         output = self.stacked_rnn(embeddding, padding)
         o, _ = output[0], output[1]
 
+        self.adaptive_softmax = True
         if not self.adaptive_softmax:
             if self.tie_embedding:
-                o = self.lookup_table(0)
+                o = self.lookup_table(o)
 
             o = self.out(o)  #[time, bs, vocab_size]
 
@@ -88,7 +91,7 @@ class RNNEncoder(nn.Module):
     def forward_step(
         self, input: torch.Tensor, seq_len: torch.Tensor,
         state_m: torch.Tensor, state_c: torch.Tensor
-    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 
         embeddding = self.lookup_table(input)  # [bs, time, dim]
 
@@ -100,14 +103,14 @@ class RNNEncoder(nn.Module):
         embeddding = embeddding.transpose(0, 1)
 
         output = self.stacked_rnn(embeddding, padding, (state_m, state_c))
-        o, s = output[0], output[1]
+        o, s_m, s_c = output[0], output[1], output[2]
 
         if not self.adaptive_softmax:
             o = self.out(o)  #[time, bs, vocab_size]
 
         o = self.log_softmax(o)
         o = o.transpose(0, 1).contiguous()  #[batch, time, vocab_size]
-        return o, s
+        return o, s_m, s_c
 
 
 class RNNLM(nn.Module):
@@ -174,8 +177,8 @@ class RNNLM(nn.Module):
         bs = input.size(0)
         seq_len = torch.ones(bs, 1)
         # Note: for one step only
-        o, s = self.model.forward_step(input, seq_len, state_m, state_c)
-        return o, s[0], s[1]
+        o, s_m, s_c = self.model.forward_step(input, seq_len, state_m, state_c)
+        return o, s_m, s_c
 
 
 def init_lm_model(configs) -> nn.Module:

@@ -24,12 +24,13 @@ class RNNCell(nn.Module):
         return NotImplemented("abstract method")
 
 
-def zero_state_helper(batch_size,
-                      hidden,
-                      output,
-                      method="zero") -> Tuple[torch.Tensor, torch.Tensor]:
+def zero_state_helper(
+        batch_size: int,
+        hidden: int,
+        output: int,
+        method: str = "zero") -> Tuple[torch.Tensor, torch.Tensor]:
     # TODO: more methods
-    _ = method
+    # _ = method
     return torch.zeros(batch_size, output), torch.zeros(batch_size, hidden)
 
 

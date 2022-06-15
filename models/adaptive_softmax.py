@@ -71,7 +71,7 @@ class AdaptiveLogSoftmax(torch.nn.Module):
 
             self.tail.append(projection)
 
-    def forward(self, input: torch.Tensor, dim: int) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, dim: int = 1) -> torch.Tensor:
         # check shape: [x, y, vocab]
         assert len(input.size()) == 3
         d1 = input.size(0)
