@@ -50,7 +50,7 @@ class RNN(nn.Module):
 
             outputs.append(state[0])
 
-        return torch.stack(outputs), state
+        return torch.stack(outputs, dim=0), state
 
 
 class StackedRNNLayer(nn.Module):
@@ -128,19 +128,18 @@ class StackedRNNLayer(nn.Module):
             state0 = states
 
         xs = input
-        state1 = []
 
         if not self.skip_first_dropout:
             xs = self.dropout(xs)
 
-        states_m = []
-        states_c = []
+        states1_m = []
+        states1_c = []
         for (i, layer) in enumerate(self.rnn):
             # ys, s = self.rnn[i](xs, padding, state0[i])
             ys, s = layer(xs, padding, (state0[0][i], state0[1][i]))
             ys = self.dropout(ys)
-            states_m.append(s[0].unsqueeze(0))
-            states_c.append(s[1].unsqueeze(0))
+            states1_m.append(s[0].unsqueeze(0))
+            states1_c.append(s[1].unsqueeze(0))
             # rnn base have embedding , different input/output shape
             # internal layer have same input output shape:
             # 1->ouput+2->output ...
@@ -150,4 +149,5 @@ class StackedRNNLayer(nn.Module):
             else:
                 xs = ys
 
-        return xs, torch.concat(states_m, dim=0), torch.concat(states_c, dim=0)
+        return xs, torch.concat(states1_m, dim=0), torch.concat(states1_c,
+                                                                dim=0)

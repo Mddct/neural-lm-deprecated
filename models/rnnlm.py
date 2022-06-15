@@ -62,6 +62,7 @@ class RNNEncoder(nn.Module):
             seq_len: [batch]
         """
 
+        bs = input.size(0)
         # id to embedding
         embeddding = self.lookup_table(input)  # [bs, time, dim]
 
@@ -74,7 +75,8 @@ class RNNEncoder(nn.Module):
         padding = padding.transpose(0, 1).unsqueeze(2)  #[time, bs, 1]
         embeddding = embeddding.transpose(0, 1)
 
-        output = self.stacked_rnn(embeddding, padding)
+        zero_state = self.stacked_rnn.zero_state(bs)
+        output = self.stacked_rnn(embeddding, padding, zero_state)
         o, _ = output[0], output[1]
 
         self.adaptive_softmax = True
@@ -95,11 +97,15 @@ class RNNEncoder(nn.Module):
 
         embeddding = self.lookup_table(input)  # [bs, time, dim]
 
-        max_seq_len = torch.max(seq_len)
-        ids = torch.arange(0, max_seq_len, 1)  # [bs]
-        padding = seq_len.unsqueeze(1) < ids  # [bs, max_seq_len]
+        # max_seq_len = torch.max(seq_len)
+        # ids = torch.arange(0, max_seq_len, 1).unsqueeze(0)  # [bs]
+        # padding = seq_len.unsqueeze(1) < ids  # [bs, max_seq_len]
 
-        padding = padding.transpose(0, 1).unsqueeze(2)  #[time, bs, 1]
+        # padding = padding.transpose(0, 1).unsqueeze(2)  #[time, bs, 1]
+        true_word = torch.ones_like(input).unsqueeze(0)
+        false_word = ~true_word
+        padding = torch.where(torch.greater_equal(input, 0), true_word,
+                              false_word)
         embeddding = embeddding.transpose(0, 1)
 
         output = self.stacked_rnn(embeddding, padding, (state_m, state_c))
@@ -162,12 +168,16 @@ class RNNLM(nn.Module):
         return loss, ppl, total_ppl, valid_words
 
     @torch.jit.export
+    def zero_states(self,
+                    batch_size: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        m, c = self.model.stacked_rnn.zero_state(batch_size)
+        return m, c
+
+    @torch.jit.export
     def forward_step(
-        self,
-        input: torch.Tensor,
-        output: torch.Tensor,
-        state: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, input: torch.Tensor, output: torch.Tensor, state_m: torch.Tensor,
+        state_c: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             input: [batch_size, 1]
@@ -177,14 +187,14 @@ class RNNLM(nn.Module):
             state:
 
         """
-        state_m, state_c = torch.split(state, 2, dim=0)
         bs = input.size(0)
         seq_len = torch.ones(bs, 1)
+
         # Note: for one step only
         o, s_m, s_c = self.model.forward_step(input, seq_len, state_m, state_c)
-        next_state = torch.stack([s_m, s_c], dim=0)
-        score = torch.sum(torch.where(input == output, 1, 0), dim=1)
-        return score, next_state
+        # score = torch.sum(torch.where(input == output, 1, 0), dim=1)
+        return o, s_m, s_c
+        # return score, s_m, s_c
 
 
 def init_lm_model(configs) -> nn.Module:

@@ -145,6 +145,7 @@ class GRUCell(RNNCell):
              state:  (new_m, new_c)
         """
         m, c = state[0], state[1]
+        print(input.shape, m.shape, c.shape)
         input_state = torch.concat([input, m], dim=1)
         r_g = torch.matmul(input_state, self.linear_w_r)
 

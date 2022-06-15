@@ -28,10 +28,10 @@ rnn = RNN(cell=cell)
 input = torch.ones(10, 10, 10)
 padding = torch.zeros(10, 10, 1, dtype=torch.int32)
 
-xs, state1 = rnn(input, padding)
+xs, state1 = rnn(input, padding, state)
 
 stacked_rnn = StackedRNNLayer('gru', 10, 10, 10, 10)
-multi_layer_xs, multi_layer_state1 = stacked_rnn(input, padding)
+multi_layer_xs, multi_layer_state1_m, _ = stacked_rnn(input, padding)
 
 rnn_encoder = RNNEncoder(vocab_size=100,
                          n_layers=4,
@@ -67,3 +67,12 @@ model = init_lm_model(configs=configs)
 _, ppl, _, valid_words = model(input, input_len, label, label_len)
 print(ppl.shape)
 print(valid_words)
+
+zero_state = model.zero_states(1)
+# model.forward_step()
+print(zero_state[0].shape)
+print(zero_state[1].shape)
+
+a = torch.tensor([[1]], dtype=torch.int)
+print("==================")
+model.forward_step(a, a, zero_state[0], zero_state[1])

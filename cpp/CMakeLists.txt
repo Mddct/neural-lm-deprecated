@@ -48,6 +48,6 @@ add_library(lm STATIC
 )
 target_link_libraries(lm ${TORCH_LIBRARIES})
 
-# add_executable(lm_main lm_main.cc)
-# target_link_libraries(lm_main PUBLIC lm)
+add_executable(lm_main lm_main.cc)
+target_link_libraries(lm_main PUBLIC lm)
 
