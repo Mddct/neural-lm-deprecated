@@ -103,9 +103,7 @@ class RNNEncoder(nn.Module):
 
         # padding = padding.transpose(0, 1).unsqueeze(2)  #[time, bs, 1]
         true_word = torch.ones_like(input).unsqueeze(0)
-        false_word = ~true_word
-        padding = torch.where(torch.greater_equal(input, 0), true_word,
-                              false_word)
+        padding = torch.where(torch.greater_equal(input, 0), true_word, 0)
         embeddding = embeddding.transpose(0, 1)
 
         output = self.stacked_rnn(embeddding, padding, (state_m, state_c))
