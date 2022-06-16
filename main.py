@@ -74,5 +74,4 @@ print(zero_state[0].shape)
 print(zero_state[1].shape)
 
 a = torch.tensor([[1]], dtype=torch.int)
-print("==================")
 model.forward_step(a, a, zero_state[0], zero_state[1])
