@@ -30,4 +30,5 @@ See if it appears in ctc+lm fusion
 - [END-TO-END ATTENTION-BASED LARGE VOCABULARY SPEECH RECOGNITION](https://arxiv.org/pdf/1508.04395.pdf)
 - [Efficient softmax approximation for GPUs](https://arxiv.org/pdf/1609.04309.pdf)
 - [Using the Output Embedding to Improve Language Models](https://arxiv.org/abs/1608.05859)
+- [https://arxiv.org/pdf/2106.02302.pdf](Minimum Word Error Rate Training with Language Model Fusion for End-to-End Speech Recognition)
 - etc
