@@ -130,6 +130,19 @@ class GRUCell(RNNCell):
         return zero_state_helper(batch_size, self.hidden_size,
                                  self.output_size)
 
+    def layer_norm(self, x: torch.Tensor, scale: torch.Tensor,
+                   layer_norm_epsilon: float) -> torch.Tensor:
+        """Applies layer normalization on the last dimension of 'x'.
+        """
+
+        # NOTE(Mddct): D(x) = D(x-mean) = E(x-mean)^2 - (E(x-mean))^2 = E(x-mean)^2
+        mean = torch.mean(x, dim=-1, keepdim=True)
+
+        centered = x - mean
+        variance = torch.mean(torch.square(x), dim=-1, keepdim=True)
+        normed = centered * torch.rsqrt(variance + layer_norm_epsilon)
+        return normed * scale
+
     def forward(
         self,
         input: torch.Tensor,
@@ -150,6 +163,9 @@ class GRUCell(RNNCell):
         input_state = torch.concat([input, m], dim=1)
         r_g = torch.matmul(input_state, self.linear_w_r)
 
+        if self.apply_layer_norm:
+            r_g = self.layer_norm(r_g, self.br_ln_scale + 1.0,
+                                  self.layer_norm_epsilon)
         if self.enable_gru_output_bias:
             r_g = r_g + self.b_r
             r_g = torch.sigmoid(r_g)
@@ -158,7 +174,11 @@ class GRUCell(RNNCell):
         n_g = torch.matmul(torch.concat([input, torch.mul(r_g, m)], 1),
                            self.linear_w_n)
 
-        # TODO: layer norm here
+        if self.apply_layer_norm:
+            u_g = self.layer_norm(u_g, self.bu_ln_scale + 1.0,
+                                  self.layer_norm_epsilon)
+            n_g = self.layer_norm(n_g, self.bn_ln_scale + 1.0,
+                                  self.layer_norm_epsilon)
         if self.enable_gru_output_bias:
             u_g = u_g + self.b_u
             n_g = n_g + self.b_n
@@ -166,8 +186,6 @@ class GRUCell(RNNCell):
         u_g = torch.sigmoid(u_g)
         n_g = torch.tanh(n_g)
         new_c = (1.0 - u_g) * (c) + u_g * n_g
-
-        # TODO: layer norm here
 
         # TODO clip value here
 

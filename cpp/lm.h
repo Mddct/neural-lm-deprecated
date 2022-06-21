@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 const char kSOS[] = "<s>";
 const char kEOS[] = "</s>";
@@ -27,7 +26,7 @@ class RNNLm {
 
  private:
   std::shared_ptr<TorchModule> module_ = nullptr;
-  // 100 for now it should be equal to sos/eos index int  dit index
+  // 100 for now it should be equal to sos/eos index int  dict index
   int sos_ = 99;
   int eos_ = 99;
 
