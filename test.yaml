@@ -15,3 +15,35 @@ encoder_conf:
 model_conf:
     lsm_weight: 0.1     # label smoothing option
     length_normalized_loss: false
+
+dataset_conf:
+    filter_conf:
+        # max_length: 40960
+        max_length: 200000
+        min_length: 1
+        token_max_length: 10000
+        token_min_length: 1
+    shuffle: true
+    shuffle_conf:
+        shuffle_size: 2500
+    sort: true
+    sort_conf:
+        sort_size: 1500  # sort_size should be less than shuffle_size
+    batch_conf:
+        batch_type: 'dynamic' # static or dynamic
+        max_tokens_in_batch: 30000
+
+
+grad_clip: 5
+accum_grad: 1
+max_epoch: 180000000000
+log_interval: 1
+
+optim: adam
+optim_conf:
+     #lr: 0.001
+     lr: 0.001
+#    lr: 0.0005
+scheduler: warmuplr     # pytorch v1.1.0+ required
+scheduler_conf:
+    warmup_steps: 5000
