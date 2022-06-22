@@ -121,7 +121,7 @@ def Dataset(data_type, data_list_file, symbol_table, conf, partition=True):
     shuffle = conf.get('shuffle', True)
     dataset = DataList(lists, shuffle=shuffle, partition=partition)
     if data_type == 'raw_txt':
-        dataset = Processor(dataset, processor.parse_raw)
+        dataset = Processor(dataset, processor.parse_raw_text)
     else:
         # TODO: support format1 and format2
         pass

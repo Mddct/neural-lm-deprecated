@@ -93,7 +93,8 @@ class Executor:
                 if batch_idx % accum_grad == 0:
                     if rank == 0 and writer is not None:
                         writer.add_scalar('train_loss', loss, self.step)
-                        writer.add_scalar('batch ppl:', batch_ppl, self.step)
+                        writer.add_scalar('batch ppl:', batch_ppl.item(),
+                                          self.step)
                     # Use mixed precision training
                     if use_amp:
                         scaler.unscale_(optimizer)
@@ -120,7 +121,7 @@ class Executor:
                         epoch, batch_idx,
                         loss.item() * accum_grad)
                     if batch_ppl is not None:
-                        log_str += 'loss_att {:.6f} '.format(batch_ppl.item())
+                        log_str += 'batch_ppl {:.6f} '.format(batch_ppl.item())
 
                     log_str += 'lr {:.8f} rank {}'.format(lr, rank)
                     logging.debug(log_str)

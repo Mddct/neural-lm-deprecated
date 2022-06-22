@@ -55,9 +55,12 @@ def text_opener(data):
             Iterable[{src, stream}]
     """
     url_opener(data, mode="r")
+    for sample in data:
+        assert 'src' in sample
+        yield sample
 
 
-# TODO: tezt_opener and than read from stream1 to support format1
+# TODO: text_opener and than read from stream1 to support format1
 
 
 def url_opener(data, mode='rb'):
@@ -99,7 +102,7 @@ def parse_raw_text(data):
             Iterable[{key, wav, txt, sample_rate}]
     """
     for sample in data:
-        segs = sample.strip("\n").split("\t")
+        segs = sample['src'].strip("\n").split("\t")
         if len(segs) != 2:
             continue
 
@@ -257,23 +260,27 @@ def padding(data):
     """
     for sample in data:
         assert isinstance(sample, list)
+        txt = []
+        tokens = []
         input = []
         label_eos = []
-        batch_size = len(sample)
+        # batch_size = len(sample)
 
-        sos = torch.ones()
+        # sos = torch.ones()
         for x in sample:
+            txt.append(x["txt"])
+            tokens.append(x["tokens"])
             label = x["label"]
             input.append(label[:-1])  # before eos
             label_eos.append(label[1:])  # after sos
 
         input = torch.nn.utils.rnn.pad_sequence(
-            input, batch_first=True, padding_value=-1)  # [batch, seq_len]
-        input_lens = torch.where(input, -1).sum(dim=1)  # [batch]
+            input, batch_first=True, padding_value=0)  # [batch, seq_len]
+        input_lens = torch.where(input != 0, 1, 0).sum(dim=1)  # [batch]
         label_eos = torch.nn.utils.rnn.pad_sequence(
             label_eos,
             batch_first=True,
             padding_value=-1,
         )  # [batch, seq_len]
-        label_lens = torch.where(label, -1).sum(dim=1)  #[batch]
+        label_lens = torch.where(label_eos != -1, 1, 0).sum(dim=1)  #[batch]
         yield (txt, tokens, input, input_lens, label_eos, label_lens)
