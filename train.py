@@ -45,8 +45,8 @@ def get_args():
     parser.add_argument('--train_data', required=True, help='train data file')
     parser.add_argument('--cv_data', required=True, help='cv data file')
     parser.add_argument('--gpu',
-                        type=bool,
-                        default=true,
+                        type=int,
+                        default=-1,
                         help='whether to use gpu')
     parser.add_argument("--local_rank", default=1, type=int)
 
