@@ -167,9 +167,9 @@ class Executor:
                     if batch_ppl is not None:
                         log_str += 'batch_ppl {:.6f} '.format(batch_ppl.item())
                     log_str += 'history ppl {:.6f}'.format(
-                        math.exp(total_loss) / total_valid_words)
+                        math.exp(total_loss / total_valid_words))
                     log_str += ' rank {}'.format(rank)
                     logging.debug(log_str)
 
-        return total_loss, num_seen_utts, math.exp(
-            total_loss) / total_valid_words
+        return total_loss, num_seen_utts, math.exp(total_loss /
+                                                   total_valid_words)

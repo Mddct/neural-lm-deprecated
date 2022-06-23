@@ -158,9 +158,8 @@ class RNNLM(nn.Module):
         logit = self.model(input, input_length)  #[bs, time_stamp, vocab]
         valid_words = labels_length.sum()
         loss, each_seq_loss_in_batch = self.criterion(logit, labels)
-        total_ppl = loss.exp(
-        ) if self.length_normalized_loss else loss * input.size(
-            0) / valid_words
+        total_ppl = loss.exp() if self.length_normalized_loss else (
+            loss * input.size(0) / valid_words).exp()
 
         ppl = each_seq_loss_in_batch.exp()
         return loss, ppl, total_ppl, valid_words
