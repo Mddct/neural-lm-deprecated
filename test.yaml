@@ -3,13 +3,14 @@
 encoder: rnn
 encoder_conf:
     n_layers: 4
-    input_nodes: 100
-    hidden_nodes: 100
-    output_nodes: 20
+    input_nodes: 768
+    hidden_nodes: 1024
+    output_nodes: 1024
     cell_type: 'gru'
     adaptive_softmax: true
-    cutoffs: '10,30'
+    cutoffs: '5012,22620'
     div_value: 2
+
 
 # hybrid CTC/attention
 model_conf:
