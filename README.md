@@ -1,4 +1,4 @@
-# under development may not work until whole pipeline done
+# (deprecated, will reimplement by jax) under development may not work until whole pipeline done
 
 # neural-lm
 focus on fusion on speech recognition
